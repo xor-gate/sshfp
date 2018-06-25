@@ -16,6 +16,12 @@ type Resolver struct {
 	cache Cache
 }
 
+type Entry struct {
+	*dns.SSHFP
+	Hostname    string
+	Fingerprint []byte
+}
+
 type Option func(*Resolver)
 
 func NewResolver(opts ...Option) *Resolver {
@@ -37,7 +43,13 @@ func WithCache(c Cache) Option {
 }
 
 func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
-	r.cache.Get()
+	ce, ok := r.cache.Get(hostname)
+	if ok {
+		if !ce.IsSSHPublicKeyValid(key) {
+			return fmt.Errorf("sshfp: host verification failed (cache)")
+		}
+		return nil
+	}
 
 	l, err := r.Lookup(hostname)
 	if err != nil {
@@ -51,7 +63,11 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 
 		// Check if there is a match
 		if bytes.Equal(keyFpSHA256[:], raw) {
-			r.cache.Set()
+			e := &Entry{
+				SSHFP:       sshfp,
+				Fingerprint: keyFpSHA256[:],
+			}
+			r.cache.Set(e)
 			return nil
 		}
 	}
@@ -62,8 +78,6 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 func (r *Resolver) Lookup(host string) ([]*dns.SSHFP, error) {
 	c := new(dns.Client)
 	m := new(dns.Msg)
-
-
 
 	// TODO: to ugly hack to be able to parse "shulgin.xor-gate.org:6222" ...
 	hostURL, err := url.Parse("tcp://" + host)
@@ -93,4 +107,12 @@ func (r *Resolver) Lookup(host string) ([]*dns.SSHFP, error) {
 		l = append(l, sshfp)
 	}
 	return l, nil
+}
+
+func (e *Entry) IsSSHPublicKeyValid(key ssh.PublicKey) bool {
+	if e.Fingerprint == nil {
+		return false
+	}
+	fp := sha256.Sum256(key.Marshal())
+	return bytes.Equal(e.Fingerprint, fp[:])
 }

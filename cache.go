@@ -5,21 +5,25 @@ import (
 )
 
 type Cache interface {
-	Set()
-	Get()
+	Set(e *Entry)
+	Get(hostname string) (*Entry, bool)
 }
 
 type MemoryCache struct {
+	c map[string]*Entry
 }
 
 func NewMemoryCache() *MemoryCache {
-	return &MemoryCache{}
+	return &MemoryCache{c: make(map[string]*Entry)}
 }
 
-func (mc *MemoryCache) Set() {
-	fmt.Println("mc Set")
+func (mc *MemoryCache) Set(e *Entry) {
+	mc.c[e.Hostname] = e
+	fmt.Println("Set", e)
 }
 
-func (mc *MemoryCache) Get() {
-	fmt.Println("mc Get")
+func (mc *MemoryCache) Get(hostname string) (*Entry, bool) {
+	e, ok := mc.c[hostname]
+	fmt.Println("Get", e)
+	return e, ok
 }
