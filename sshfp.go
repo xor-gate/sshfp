@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"time"
 
 	"github.com/miekg/dns"
 	"golang.org/x/crypto/ssh"
@@ -16,66 +17,79 @@ type Resolver struct {
 	cache Cache
 }
 
-type Entry struct {
-	*dns.SSHFP
-	Hostname    string
-	Fingerprint []byte
-}
-
 type Option func(*Resolver)
 
-func NewResolver(opts ...Option) *Resolver {
+// NewResolver creates a new DNS SSHFP resolver
+func NewResolver(opts ...Option) (*Resolver, error) {
 	r := &Resolver{}
 	for _, option := range opts {
 		option(r)
 	}
 
 	if r.cache == nil {
-		r.cache = NewMemoryCache()
+		cache, err := NewMemoryCache(1024)
+		if err != nil {
+			return nil, err
+		}
+		r.cache = cache
 	}
-	return r
+	return r, nil
 }
 
+// WithCache sets a Cache for the Resolver
 func WithCache(c Cache) Option {
 	return func(r *Resolver) {
 		r.cache = c
 	}
 }
 
+// HostKeyCallback with DNS SSHFP entry verification for golang.org/x/crypto/ssh
 func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
+	// lookup cache
 	ce, ok := r.cache.Get(hostname)
 	if ok {
-		if !ce.IsSSHPublicKeyValid(key) {
-			return fmt.Errorf("sshfp: host verification failed (cache)")
+		if !ce.IsExpired() {
+			if ce.IsSSHPublicKeyValid(key) {
+				return nil
+			} else {
+				return fmt.Errorf("sshfp: host key changed")
+			}
+		} else {
+			r.cache.Remove(ce)
 		}
-		return nil
 	}
 
-	l, err := r.Lookup(hostname)
+	// lookup dns
+	entries, err := r.LookupHost(hostname)
 	if err != nil {
 		return err
 	}
 
+	// TODO: SHA256 checksum
 	keyFpSHA256 := sha256.Sum256(key.Marshal())
 
-	for _, sshfp := range l {
-		raw, _ := hex.DecodeString(sshfp.FingerPrint)
-
-		// Check if there is a match
-		if bytes.Equal(keyFpSHA256[:], raw) {
-			e := &Entry{
-				SSHFP:       sshfp,
-				Fingerprint: keyFpSHA256[:],
-			}
-			r.cache.Set(e)
-			return nil
+	for _, entry := range entries {
+		fp, _ := hex.DecodeString(entry.FingerPrint)
+		if !bytes.Equal(fp, keyFpSHA256[:]) {
+			continue
 		}
-	}
 
+		expiresAt := time.Now().Add(time.Duration(entry.Hdr.Ttl) * time.Second)
+		fmt.Println("expiresAt", expiresAt)
+		e := &Entry{
+			SSHFP:       entry,
+			ExpiresAt:   expiresAt,
+			Hostname:    hostname,
+			Fingerprint: fp,
+		}
+		r.cache.Add(e)
+		return nil
+	}
 	return fmt.Errorf("sshfp: no host key found")
 }
 
-func (r *Resolver) Lookup(host string) ([]*dns.SSHFP, error) {
+// LookupHost looks up the given host for DNS SSHFP records
+func (r *Resolver) LookupHost(host string) ([]*dns.SSHFP, error) {
 	c := new(dns.Client)
 	m := new(dns.Msg)
 
@@ -109,10 +123,22 @@ func (r *Resolver) Lookup(host string) ([]*dns.SSHFP, error) {
 	return l, nil
 }
 
+// IsSSHPublicKeyValid checks if the key is valid
 func (e *Entry) IsSSHPublicKeyValid(key ssh.PublicKey) bool {
 	if e.Fingerprint == nil {
 		return false
 	}
 	fp := sha256.Sum256(key.Marshal())
 	return bytes.Equal(e.Fingerprint, fp[:])
+}
+
+// TTL calculates the remaining seconds the entry is valid
+func (e *Entry) TTL() uint32 {
+	return uint32(e.ExpiresAt.Sub(time.Now()) / time.Second)
+}
+
+// IsExpired checks if the entry is expired
+func (e *Entry) IsExpired() bool {
+	fmt.Println("TTL:", e.TTL())
+	return time.Now().After(e.ExpiresAt)
 }
