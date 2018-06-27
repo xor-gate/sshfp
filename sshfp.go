@@ -13,40 +13,44 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// Resolver resolves DNS SSHFP records
 type Resolver struct {
-	cache Cache
+	c Cache
 }
 
-type Option func(*Resolver)
+// ResolverOption for Resolver
+type ResolverOption func(*Resolver)
 
 // NewResolver creates a new DNS SSHFP resolver
-func NewResolver(opts ...Option) (*Resolver, error) {
+func NewResolver(opts ...ResolverOption) (*Resolver, error) {
 	r := &Resolver{}
 	for _, option := range opts {
 		option(r)
 	}
 
-	if r.cache == nil {
+	// Check if a cache is attached, or else we attach one
+	if r.c == nil {
 		cache, err := NewMemoryCache(1024)
 		if err != nil {
 			return nil, err
 		}
-		r.cache = cache
+		r.c = cache
 	}
+
 	return r, nil
 }
 
 // WithCache sets a Cache for the Resolver
-func WithCache(c Cache) Option {
+func WithCache(c Cache) ResolverOption {
 	return func(r *Resolver) {
-		r.cache = c
+		r.c = c
 	}
 }
 
 // HostKeyCallback with DNS SSHFP entry verification for golang.org/x/crypto/ssh
 func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
 	// lookup cache
-	ce, ok := r.cache.Get(hostname)
+	ce, ok := r.c.Get(hostname)
 	if ok {
 		if !ce.IsExpired() {
 			if ce.IsSSHPublicKeyValid(key) {
@@ -55,7 +59,7 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 				return fmt.Errorf("sshfp: host key changed")
 			}
 		} else {
-			r.cache.Remove(ce)
+			r.c.Remove(ce)
 		}
 	}
 
@@ -65,9 +69,12 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 		return err
 	}
 
-	// TODO: SHA256 checksum
+	// SHA256 checksum of key
+	// TODO should also support other algos
 	keyFpSHA256 := sha256.Sum256(key.Marshal())
 
+	// TODO very naive way to validate, we should match on key type and algo
+	//      and don't brute force check
 	for _, entry := range entries {
 		fp, _ := hex.DecodeString(entry.FingerPrint)
 		if !bytes.Equal(fp, keyFpSHA256[:]) {
@@ -82,7 +89,7 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 			Hostname:    hostname,
 			Fingerprint: fp,
 		}
-		r.cache.Add(e)
+		r.c.Add(e)
 		return nil
 	}
 	return fmt.Errorf("sshfp: no host key found")
