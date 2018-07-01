@@ -1,14 +1,17 @@
 package sshfp
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"time"
 
 	"github.com/hashicorp/golang-lru"
 	"github.com/miekg/dns"
+	"golang.org/x/crypto/ssh"
 )
 
-// Entry is
+// Entry wraps a DNS SSHFP entry used for caching
 type Entry struct {
 	*dns.SSHFP
 	ExpiresAt   time.Time
@@ -54,4 +57,24 @@ func (mc *MemoryCache) Get(hostname string) (*Entry, bool) {
 // Remove entry from the cache
 func (mc *MemoryCache) Remove(e *Entry) {
 	mc.c.Remove(e)
+}
+
+// IsSSHPublicKeyValid checks if the key is valid
+func (e *Entry) IsSSHPublicKeyValid(key ssh.PublicKey) bool {
+	if e.Fingerprint == nil {
+		return false
+	}
+	fp := sha256.Sum256(key.Marshal())
+	return bytes.Equal(e.Fingerprint, fp[:])
+}
+
+// TTL calculates the remaining seconds the entry is valid
+func (e *Entry) TTL() uint32 {
+	return uint32(e.ExpiresAt.Sub(time.Now()) / time.Second)
+}
+
+// IsExpired checks if the entry is expired
+func (e *Entry) IsExpired() bool {
+	fmt.Println("TTL:", e.TTL())
+	return time.Now().After(e.ExpiresAt)
 }

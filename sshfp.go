@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 	"time"
@@ -15,17 +16,21 @@ import (
 
 // Resolver resolves DNS SSHFP records
 type Resolver struct {
-	c Cache
+	c  Cache
+	cc *dns.ClientConfig
 }
 
 // ResolverOption for Resolver
-type ResolverOption func(*Resolver)
+type ResolverOption func(*Resolver) error
 
 // NewResolver creates a new DNS SSHFP resolver
 func NewResolver(opts ...ResolverOption) (*Resolver, error) {
 	r := &Resolver{}
 	for _, option := range opts {
-		option(r)
+		err := option(r)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Check if a cache is attached, or else we attach one
@@ -42,8 +47,33 @@ func NewResolver(opts ...ResolverOption) (*Resolver, error) {
 
 // WithCache sets a Cache for the Resolver
 func WithCache(c Cache) ResolverOption {
-	return func(r *Resolver) {
+	return func(r *Resolver) error {
 		r.c = c
+		return nil
+	}
+}
+
+// WithDNSClientConfigFromFile loads a resolv.conf(5) like file
+func WithDNSClientConfigFromFile(resolvconf string) ResolverOption {
+	return func(r *Resolver) error {
+		cc, err := dns.ClientConfigFromFile(resolvconf)
+		if err != nil {
+			return err
+		}
+		r.cc = cc
+		return nil
+	}
+}
+
+// WithDNSClientConfigFromReader works like WithDNSClientConfigFromFile but takes an io.Reader as argument
+func WithDNSClientConfigFromReader(resolvconf io.Reader) ResolverOption {
+	return func(r *Resolver) error {
+		cc, err := dns.ClientConfigFromReader(resolvconf)
+		if err != nil {
+			return err
+		}
+		r.cc = cc
+		return nil
 	}
 }
 
@@ -128,24 +158,4 @@ func (r *Resolver) LookupHost(host string) ([]*dns.SSHFP, error) {
 		l = append(l, sshfp)
 	}
 	return l, nil
-}
-
-// IsSSHPublicKeyValid checks if the key is valid
-func (e *Entry) IsSSHPublicKeyValid(key ssh.PublicKey) bool {
-	if e.Fingerprint == nil {
-		return false
-	}
-	fp := sha256.Sum256(key.Marshal())
-	return bytes.Equal(e.Fingerprint, fp[:])
-}
-
-// TTL calculates the remaining seconds the entry is valid
-func (e *Entry) TTL() uint32 {
-	return uint32(e.ExpiresAt.Sub(time.Now()) / time.Second)
-}
-
-// IsExpired checks if the entry is expired
-func (e *Entry) IsExpired() bool {
-	fmt.Println("TTL:", e.TTL())
-	return time.Now().After(e.ExpiresAt)
 }
