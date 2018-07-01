@@ -14,7 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	res, err := sshfp.NewResolver(sshfp.WithCache(mc))
+	res, err := sshfp.NewResolver(sshfp.WithCache(mc), sshfp.WithDNSClientConfigFromFile("/etc/resolv.conf"))
 	if err != nil {
 		log.Fatal(err)
 	}

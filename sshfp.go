@@ -34,6 +34,7 @@ func NewResolver(opts ...ResolverOption) (*Resolver, error) {
 	}
 
 	// Check if a cache is attached, or else we attach one
+	// TODO user should be able to use the package without a cache
 	if r.c == nil {
 		cache, err := NewMemoryCache(1024)
 		if err != nil {
@@ -42,6 +43,7 @@ func NewResolver(opts ...ResolverOption) (*Resolver, error) {
 		r.c = cache
 	}
 
+	// TODO should check if a clientconfig is loaded with at least one server
 	return r, nil
 }
 
@@ -60,6 +62,7 @@ func WithDNSClientConfigFromFile(resolvconf string) ResolverOption {
 		if err != nil {
 			return err
 		}
+		fmt.Println(cc)
 		r.cc = cc
 		return nil
 	}
@@ -89,6 +92,7 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 				return fmt.Errorf("sshfp: host key changed")
 			}
 		} else {
+			// invalidate entry from the cache when it is expired
 			r.c.Remove(ce)
 		}
 	}
@@ -112,7 +116,6 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 		}
 
 		expiresAt := time.Now().Add(time.Duration(entry.Hdr.Ttl) * time.Second)
-		fmt.Println("expiresAt", expiresAt)
 		e := &Entry{
 			SSHFP:       entry,
 			ExpiresAt:   expiresAt,
@@ -138,7 +141,9 @@ func (r *Resolver) LookupHost(host string) ([]*dns.SSHFP, error) {
 
 	m.SetQuestion(dns.Fqdn(hostURL.Hostname()), dns.TypeSSHFP)
 	m.RecursionDesired = true
-	resp, _, err := c.Exchange(m, net.JoinHostPort("ns1.transip.nl", "53"))
+
+	// TODO loop over r.cc.Servers...
+	resp, _, err := c.Exchange(m, net.JoinHostPort(r.cc.Servers[0], r.cc.Port))
 
 	if err != nil {
 		return nil, err
@@ -157,5 +162,6 @@ func (r *Resolver) LookupHost(host string) ([]*dns.SSHFP, error) {
 		}
 		l = append(l, sshfp)
 	}
+
 	return l, nil
 }
