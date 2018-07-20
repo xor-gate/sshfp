@@ -6,13 +6,13 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// SSHClient is a wrapper for ssh.Client
 type SSHClient struct {
-	key  []byte
-	c    *ssh.Client
-	host string
-	cfg  *ssh.ClientConfig
+	c   *ssh.Client
+	cfg *ssh.ClientConfig
 }
 
+// NewSSHClient creates a new SSH client with custom ssh.HostKeyCallback
 func NewSSHClient(hkcb ssh.HostKeyCallback) *SSHClient {
 	return &SSHClient{
 		cfg: &ssh.ClientConfig{
@@ -21,6 +21,7 @@ func NewSSHClient(hkcb ssh.HostKeyCallback) *SSHClient {
 	}
 }
 
+// SetPrivateKeyFromFile loads the public key from the private key
 func (c *SSHClient) SetPrivateKeyFromFile(filename string) error {
 	key, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -36,6 +37,7 @@ func (c *SSHClient) SetPrivateKeyFromFile(filename string) error {
 	return nil
 }
 
+// Connect to the given user on host
 func (c *SSHClient) Connect(user, host string) error {
 	c.cfg.User = user
 	sc, err := ssh.Dial("tcp", host, c.cfg)

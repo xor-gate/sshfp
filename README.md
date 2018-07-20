@@ -6,6 +6,11 @@ The sshfp project is a Golang implementation of SSH fingerprints stored in SSHFP
 
 This package is based on the awesome Golang DNS package from [github.com/miekg/dns](https://github.com/miekg/dns).
 
+* https://www.ietf.org/rfc/rfc1035.txt
+* https://tools.ietf.org/rfc/rfc6594.txt
+* https://www.ietf.org/rfc/rfc4255.txt
+* https://tools.ietf.org/html/rfc7479
+
 # LICENSE
 
 [MIT](LICENSE)
