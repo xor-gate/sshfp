@@ -105,7 +105,7 @@ func ParseZone(r io.Reader) ([]*Entry, error) {
 	return entries, nil
 }
 
-// ParseHostname parses the hostname into a url.URL it automaticly appends the SSHURLScheme
+// ParseHostname parses the hostname into a url.URL it automaticlly appends the SSHURLScheme
 //  when not the hostname is not prefixed with a scheme.
 func ParseHostname(hostname string) (*url.URL, error) {
 	if !strings.HasPrefix(SSHURLScheme, hostname) {
