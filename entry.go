@@ -49,6 +49,11 @@ func (e *Entry) IsExpired() bool {
 	return time.Now().After(e.ExpiresAt)
 }
 
+// IsValid checks if the entry is valid
+func (e *Entry) IsValid() bool {
+	return true
+}
+
 // String creates a human readable presentation of the SSHFP entry
 // <hostname> <algorithm string> <fingerprint type string>
 func (e *Entry) String() string {

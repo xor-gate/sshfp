@@ -12,4 +12,5 @@
 //
 //  c, err := ssh.Dial("tcp", "remote.example.org:22", sshClientConfig)
 //  ... Check error and do something with the SSHFP validated connected client
+
 package sshfp

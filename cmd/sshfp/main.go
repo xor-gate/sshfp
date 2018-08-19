@@ -29,7 +29,7 @@ func main() {
 	}
 
 	ssh := NewSSHClient(res.HostKeyCallback)
-	ssh.SetPrivateKeyFromFile("/home/jjacobs/.ssh/id_ecdsa")
+	ssh.SetPrivateKeyFromFile("/Users/jerry/.ssh/id_rsa")
 	err = ssh.Connect("jerry", "shulgin.xor-gate.org:6222")
 	fmt.Println(err)
 }

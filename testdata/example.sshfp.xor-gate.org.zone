@@ -1,0 +1,8 @@
+example.sshfp.xor-gate.org. IN SSHFP 1 1 c0d7dc4f36c7c9b4e0c8323abd618a558d2599b7
+example.sshfp.xor-gate.org. IN SSHFP 1 2 e26b4d3384cbeade1043062ddb1416c0a1deebe287324e09b1f7b56494eb84bf
+example.sshfp.xor-gate.org. IN SSHFP 2 1 29776d6cbf2229b721db89a7f957e1ae709d50db
+example.sshfp.xor-gate.org. IN SSHFP 2 2 7c90b50b8907ad16e75fad83d09f913896abee1e19162803b435129563867d69
+example.sshfp.xor-gate.org. IN SSHFP 3 1 5f64fce827af9caf192accdcbd01517a16b16a04
+example.sshfp.xor-gate.org. IN SSHFP 3 2 ac8433083780c0d58d9943a457912a552f2e80ce9ec60ca8ebc676c308ae30d3
+example.sshfp.xor-gate.org. IN SSHFP 4 1 dde3605da5df945baf2c611e8fa67b97a422ae31
+example.sshfp.xor-gate.org. IN SSHFP 4 2 af0d8384284c99b1bdbadb51280afb6d1fae899e0e4ba4b6c4946fe442dd1582

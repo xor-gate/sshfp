@@ -1,3 +1,7 @@
+// Copyright 2018 sshfp authors. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package sshfp
 
 import (
@@ -16,7 +20,10 @@ var ErrHostKeyChanged = fmt.Errorf("sshfp: host key changed")
 // ErrNoHostKeyFound when no host key is found in DNS (or cache)
 var ErrNoHostKeyFound = fmt.Errorf("sshfp: no host key found")
 
-// SSHURLScheme is the URL scheme for SSH host urls
+// ErrNoDNSServer when no DNS servers is available
+var ErrNoDNSServer = fmt.Errorf("sshfp: no dns server available")
+
+// SSHURLScheme is the URL scheme for SSH hostname urls
 const SSHURLScheme = "ssh://"
 
 // Algorithm of the host public key
@@ -41,7 +48,7 @@ const (
 	TypeSHA256   Type = 2
 )
 
-// String gets the algorithm string as defined in RFC. Reserved or unknown algorithms return "reserved"
+// String gets the algorithm string as defined in RFC. Reserved or unknown algorithms return "AlgorithmReserved"
 func (a Algorithm) String() string {
 	switch a {
 	case AlgorithmRSA:
@@ -53,10 +60,10 @@ func (a Algorithm) String() string {
 	case AlgorithmEd25519:
 		return "Ed25519"
 	}
-	return "reserved"
+	return "AlgorithmReserved"
 }
 
-// String gets the fingerprint type string as defined in RFC. Reserved or unknown algorithms return "reserved"
+// String gets the fingerprint type string as defined in RFC. Reserved or unknown algorithms return "TypeReserved"
 func (fp Type) String() string {
 	switch fp {
 	case TypeSHA1:
@@ -64,11 +71,11 @@ func (fp Type) String() string {
 	case TypeSHA256:
 		return "SHA-256"
 	}
-	return "reserved"
+	return "TypeReserved"
 }
 
 // ParseZone parses a RFC 1035 zonefile and creates a slice of Entry elements.
-//  This is compatible with the entries ssh-keygen -r <hostname> generates.
+//  This is compatible with the entries the command `ssh-keygen -r <hostname>` generates.
 func ParseZone(r io.Reader) ([]*Entry, error) {
 	var entries []*Entry
 
@@ -98,7 +105,8 @@ func ParseZone(r io.Reader) ([]*Entry, error) {
 	return entries, nil
 }
 
-// ParseHostname parses the hostname into a url.URL
+// ParseHostname parses the hostname into a url.URL it automaticly appends the SSHURLScheme
+//  when not the hostname is not prefixed with a scheme.
 func ParseHostname(hostname string) (*url.URL, error) {
 	if !strings.HasPrefix(SSHURLScheme, hostname) {
 		hostname = SSHURLScheme + hostname

@@ -1,16 +1,18 @@
+// Copyright 2018 sshfp authors. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package sshfp
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/golang-lru"
 )
 
 // Cache for DNS SSHFP entries
 type Cache interface {
-	Add(e ...*Entry)
+	Add(e ...*Entry) error
 	Get(hostname string) (*Entry, bool)
-	Remove(e *Entry)
+	Remove(e *Entry) error
 }
 
 // MemoryCache is a fixed with LRU cache
@@ -27,18 +29,17 @@ func NewMemoryCache(size int) (*MemoryCache, error) {
 	return &MemoryCache{c: c}, nil
 }
 
-// Add entry to the cache. When the entry property ExpiresAt is zero it never is evicted from the cache.
-func (mc *MemoryCache) Add(e ...*Entry) {
+// Add entry to the cache
+func (mc *MemoryCache) Add(e ...*Entry) error {
 	for _, entry := range e {
-		fmt.Println("Add", entry.Hostname, entry)
 		_ = mc.c.Add(entry.Hostname, entry)
 	}
+	return nil
 }
 
 // Get entry from the cache
 func (mc *MemoryCache) Get(hostname string) (*Entry, bool) {
 	ce, ok := mc.c.Get(hostname)
-	fmt.Println("Get", hostname, ce, ok)
 	if !ok {
 		return nil, false
 	}
@@ -48,6 +49,7 @@ func (mc *MemoryCache) Get(hostname string) (*Entry, bool) {
 }
 
 // Remove entry from the cache
-func (mc *MemoryCache) Remove(e *Entry) {
+func (mc *MemoryCache) Remove(e *Entry) error {
 	mc.c.Remove(e)
+	return nil
 }
