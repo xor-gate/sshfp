@@ -27,10 +27,10 @@ This package is based on the awesome Golang DNS package from [github.com/miekg/d
 [License-Image]: https://img.shields.io/npm/l/express.svg
 [Stability-Status-Image]: http://badges.github.io/stability-badges/dist/experimental.svg
 [Build-Status-Url]: http://travis-ci.org/xor-gate/sshfp
-[Build-Status-Image]: https://travis-ci.org/xor-gate/sshfp.svg?branch=master
+[Build-Status-Image]: https://travis-ci.org/xor-gate/sshfp.svg?branch=develop
 [Godoc-Url]: https://godoc.org/github.com/xor-gate/sshfp
 [Godoc-Image]: https://godoc.org/github.com/xor-gate/sshfp?status.svg
 [ReportCard-Url]: http://goreportcard.com/report/xor-gate/sshfp
 [ReportCard-Image]: https://goreportcard.com/badge/github.com/xor-gate/sshfp
-[Coverage-Url]: https://coveralls.io/r/xor-gate/sshfp?branch=master
+[Coverage-Url]: https://coveralls.io/r/xor-gate/sshfp?branch=develop
 [Coverage-image]: https://img.shields.io/coveralls/xor-gate/sshfp.svg
