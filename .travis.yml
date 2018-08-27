@@ -7,10 +7,10 @@ notifications:
 language: go
 go:
   - tip
+  - "1.11"
   - "1.10"
   - 1.9
-  - 1.8
-  - 1.7
+  # Prior to go 1.9 will not work due to github.com/miekg/dns dependency
 
 script:
   - ./.travis.sh
