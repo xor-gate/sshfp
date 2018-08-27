@@ -93,7 +93,10 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 	ce, ok := r.c.Get(host.Hostname())
 	if ok {
 		if ce.IsExpired() {
-			r.c.Remove(ce)
+			err = r.c.Remove(ce)
+			if err != nil {
+				return err
+			}
 		} else if !ce.IsSSHPublicKeyValid(key) {
 			return ErrHostKeyChanged
 		} else {
@@ -114,7 +117,11 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 	// TODO very naive way to validate, we should match on key type and algo
 	//      and don't brute force check
 	for _, entry := range entries {
-		fp, _ := hex.DecodeString(entry.FingerPrint)
+		fp, err := hex.DecodeString(entry.FingerPrint)
+		if err != nil {
+			continue
+		}
+
 		if !bytes.Equal(fp, keyFpSHA256[:]) {
 			continue
 		}
@@ -126,8 +133,8 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 			Hostname:    hostname,
 			Fingerprint: fp,
 		}
-		r.c.Add(e)
-		return nil
+
+		return r.c.Add(e)
 	}
 
 	return ErrNoHostKeyFound

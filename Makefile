@@ -6,6 +6,9 @@ export GOBIN?=$(DESTDIR)
 all: build
 ci: env test
 
+install:
+	go get ./...
+
 env:
 	go env
 	echo "---"
@@ -21,8 +24,7 @@ test:
 	go test -v $(shell go list ./... | grep -v '^vendor\/')
 
 lint:
-	go get -u github.com/golang/lint/golint
-	golint ./... | grep -v '^vendor\/' | grep -v ".pb.*.go:" || true
+	gometalinter --config .gometalinter.conf
 
 clean:
 	#rm -Rf $(TMPDIR)/debpkg*

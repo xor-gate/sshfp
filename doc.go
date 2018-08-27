@@ -2,7 +2,7 @@
 //
 // Overview
 //
-// The most basic debian package is created as follows (without error checking):
+// The most basic resolver is created as follows (without error checking):
 //
 //  r := sshfp.NewResolver(sshfp.WithDNSClientConfigFromFile("/etc/resolv.conf"))
 //
