@@ -25,8 +25,10 @@ func TestResolverPrefilledCache(t *testing.T) {
 
 	// TODO because we only store just one key and we know the zonefile has last entry Algo 4 2 (ed25519 sha256) the rsa pubkey will return ErrHostKeyChanged
 	pubKey := testParseAuthorizedKey(t, "ssh_host_rsa_key.pub")
-	assert.Equal(t, ErrHostKeyChanged, res.HostKeyCallback("example.sshfp.xor-gate.org", nil, pubKey))
+	err = res.HostKeyCallback("example.sshfp.xor-gate.org", nil, pubKey)
+	assert.Equal(t, ErrHostKeyChanged, err)
 
 	pubKey = testParseAuthorizedKey(t, "ssh_host_ed25519_key.pub")
-	assert.Nil(t, res.HostKeyCallback("example.sshfp.xor-gate.org", nil, pubKey))
+	err = res.HostKeyCallback("example.sshfp.xor-gate.org", nil, pubKey)
+	assert.Nil(t, err)
 }

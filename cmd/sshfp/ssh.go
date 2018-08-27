@@ -23,6 +23,7 @@ func NewSSHClient(hkcb ssh.HostKeyCallback) *SSHClient {
 
 // SetPrivateKeyFromFile loads the public key from the private key
 func (c *SSHClient) SetPrivateKeyFromFile(filename string) error {
+	// #nosec we allow loading arbitary files, as ssh.ParsePrivateKey validates
 	key, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err

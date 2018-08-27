@@ -20,7 +20,10 @@ func main() {
 
 	entries, err := sshfp.ParseZone(strings.NewReader(zoneFile))
 	if err == nil {
-		mc.Add(entries...)
+		err = mc.Add(entries...)
+		if err != nil {
+			log.Fatal("unable to add entries from zone:", err)
+		}
 	}
 
 	res, err := sshfp.NewResolver(sshfp.WithCache(mc), sshfp.WithDNSClientConfigFromFile("/etc/resolv.conf"))
@@ -29,7 +32,10 @@ func main() {
 	}
 
 	ssh := NewSSHClient(res.HostKeyCallback)
-	ssh.SetPrivateKeyFromFile("/Users/jerry/.ssh/id_rsa")
+	err = ssh.SetPrivateKeyFromFile("/Users/jerry/.ssh/id_rsa")
+	if err != nil {
+		log.Fatal("unable to set private key from file:", err)
+	}
 	err = ssh.Connect("jerry", "shulgin.xor-gate.org:6222")
 	fmt.Println(err)
 }
