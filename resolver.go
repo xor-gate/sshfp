@@ -148,9 +148,8 @@ func (r *Resolver) LookupHost(hostname string) ([]*dns.SSHFP, error) {
 	m.SetQuestion(dns.Fqdn(hostname), dns.TypeSSHFP)
 	m.RecursionDesired = true
 
-	// TODO loop over r.cc.Servers...
+	// TODO loop over r.cc.Servers instead of first entry
 	resp, _, err := c.Exchange(m, net.JoinHostPort(r.cc.Servers[0], r.cc.Port))
-
 	if err != nil {
 		return nil, err
 	}
