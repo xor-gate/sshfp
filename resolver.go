@@ -71,19 +71,16 @@ func WithDNSClientConfigFromReader(resolvconf io.Reader) ResolverOption {
 	}
 }
 
-// HostKeyCallback with DNS SSHFP entry verification for golang.org/x/crypto/ssh
-func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
-	host, err := ParseHostname(hostname)
-	if err != nil {
-		return err
-	}
-
-	// lookup cache
-	centries, ok := r.c.Get(host.Hostname(), AlgorithmFromSSHPublicKey(key))
+// checkCache checks the cache for a valid fingerprint
+func (r *Resolver) checkCache(hostname string, key ssh.PublicKey) error {
+	centries, ok := r.c.Get(hostname, AlgorithmFromSSHPublicKey(key))
 	if ok {
 		for _, ce := range centries {
 			if ce.IsExpired() {
-				r.c.Remove(ce)
+				err := r.c.Remove(ce)
+				if err != nil {
+					return err
+				}
 				continue
 			}
 			if ce.Validate(key) {
@@ -92,9 +89,30 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 		}
 		return ErrHostKeyChanged
 	}
+	return ErrNoHostKeyFound
+}
+
+// HostKeyCallback with DNS SSHFP entry verification for golang.org/x/crypto/ssh
+func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
+	hostURL, err := ParseHostname(hostname)
+	if err != nil {
+		return err
+	}
+	hostname = hostURL.Hostname()
+
+	// lookup cache
+	err = r.checkCache(hostname, key)
+	switch err {
+	case ErrNoHostKeyFound:
+		break
+	case nil:
+		return nil
+	default:
+		return err
+	}
 
 	// lookup dns
-	entries, err := r.LookupHost(host.Hostname())
+	entries, err := r.LookupHost(hostname)
 	if err != nil {
 		return err
 	}

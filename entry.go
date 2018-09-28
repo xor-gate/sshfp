@@ -19,6 +19,7 @@ type Entry struct {
 	Fingerprint []byte
 }
 
+// Entries for a single Hostname
 type Entries []*Entry
 
 // Validate checks if the SSH public key is valid

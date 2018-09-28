@@ -13,7 +13,7 @@ shulgin.xor-gate.org. IN SSHFP 3 2 ac8433083780c0d58d9943a457912a552f2e80ce9ec60
 `
 
 func main() {
-	mc, err := sshfp.NewMemoryCache(1024)
+	mc, err := sshfp.NewMemoryCache()
 	if err != nil {
 		log.Fatal(err)
 	}

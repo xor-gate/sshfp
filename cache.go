@@ -22,8 +22,8 @@ func NewMemoryCache() (*MemoryCache, error) {
 }
 
 func (mc *MemoryCache) add(hostname string, e *Entry) {
-	entries, ok := mc.c[hostname]
-	if !ok {
+	entries := mc.c[hostname]
+	if len(entries) == 0 {
 		entries = Entries{}
 		mc.c[hostname] = entries
 	}
