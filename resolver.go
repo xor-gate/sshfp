@@ -36,6 +36,15 @@ func NewResolver(opts ...ResolverOption) (*Resolver, error) {
 		}
 	}
 
+	// Check if a cache is attached, or else we attach one
+	if r.c == nil {
+		c, err := NewMemoryCache()
+		if err != nil {
+			return nil, err
+		}
+		r.c = c
+	}
+
 	return r, nil
 }
 
