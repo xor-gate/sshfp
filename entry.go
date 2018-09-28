@@ -19,12 +19,14 @@ type Entry struct {
 	Fingerprint []byte
 }
 
-// IsSSHPublicKeyValid checks if the key is valid
-func (e *Entry) IsSSHPublicKeyValid(key ssh.PublicKey) bool {
+type Entries []*Entry
+
+// Validate checks if the SSH public key is valid
+func (e *Entry) Validate(pubKey ssh.PublicKey) bool {
 	if e.Fingerprint == nil {
 		return false
 	}
-	fp := sha256.Sum256(key.Marshal())
+	fp := sha256.Sum256(pubKey.Marshal())
 	return bytes.Equal(e.Fingerprint, fp[:])
 }
 

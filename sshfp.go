@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/miekg/dns"
+	"golang.org/x/crypto/ssh"
 )
 
 // ErrHostKeyChanged when the SSH server host key has changed
@@ -76,8 +77,8 @@ func (fp Type) String() string {
 
 // ParseZone parses a RFC 1035 zonefile and creates a slice of Entry elements.
 //  This is compatible with the entries the command `ssh-keygen -r <hostname>` generates.
-func ParseZone(r io.Reader) ([]*Entry, error) {
-	var entries []*Entry
+func ParseZone(r io.Reader) (Entries, error) {
+	var entries Entries
 
 	tokenC := dns.ParseZone(r, "", "")
 	for token := range tokenC {
@@ -112,4 +113,19 @@ func ParseHostname(hostname string) (*url.URL, error) {
 		hostname = SSHURLScheme + hostname
 	}
 	return url.Parse(hostname)
+}
+
+// AlgorithmFromSSHPublicKey calculates the Algorithm based on the ssh.PublicKey.Type() (ssh.KeyAlgo* string)
+func AlgorithmFromSSHPublicKey(pubKey ssh.PublicKey) Algorithm {
+	switch pubKey.Type() {
+	case ssh.KeyAlgoRSA:
+		return AlgorithmRSA
+	case ssh.KeyAlgoDSA:
+		return AlgorithmDSS
+	case ssh.KeyAlgoED25519:
+		return AlgorithmEd25519
+	case ssh.KeyAlgoECDSA256, ssh.KeyAlgoECDSA384, ssh.KeyAlgoECDSA521:
+		return AlgorithmECDSA
+	}
+	return AlgorithmReserved
 }

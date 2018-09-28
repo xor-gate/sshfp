@@ -36,17 +36,6 @@ func NewResolver(opts ...ResolverOption) (*Resolver, error) {
 		}
 	}
 
-	// Check if a cache is attached, or else we attach one
-	// TODO user should be able to use the package without a cache
-	if r.c == nil {
-		cache, err := NewMemoryCache(1024)
-		if err != nil {
-			return nil, err
-		}
-		r.c = cache
-	}
-
-	// TODO should check if a clientconfig is loaded with at least one server
 	return r, nil
 }
 
@@ -90,18 +79,18 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 	}
 
 	// lookup cache
-	ce, ok := r.c.Get(host.Hostname())
+	centries, ok := r.c.Get(host.Hostname(), AlgorithmFromSSHPublicKey(key))
 	if ok {
-		if ce.IsExpired() {
-			err = r.c.Remove(ce)
-			if err != nil {
-				return err
+		for _, ce := range centries {
+			if ce.IsExpired() {
+				r.c.Remove(ce)
+				continue
 			}
-		} else if !ce.IsSSHPublicKeyValid(key) {
-			return ErrHostKeyChanged
-		} else {
-			return nil
+			if ce.Validate(key) {
+				return nil
+			}
 		}
+		return ErrHostKeyChanged
 	}
 
 	// lookup dns
@@ -142,12 +131,20 @@ func (r *Resolver) HostKeyCallback(hostname string, remote net.Addr, key ssh.Pub
 
 // LookupHost looks up the given host for DNS SSHFP records
 func (r *Resolver) LookupHost(hostname string) ([]*dns.SSHFP, error) {
+	if r.cc == nil {
+		return nil, ErrNoDNSServer
+	}
+	if len(r.cc.Servers) == 0 {
+		return nil, ErrNoDNSServer
+	}
+
 	c := new(dns.Client)
 	m := new(dns.Msg)
 
 	m.SetQuestion(dns.Fqdn(hostname), dns.TypeSSHFP)
 	m.RecursionDesired = true
 
+	// TODO error on no DNS servers
 	// TODO loop over r.cc.Servers instead of first entry
 	resp, _, err := c.Exchange(m, net.JoinHostPort(r.cc.Servers[0], r.cc.Port))
 	if err != nil {
