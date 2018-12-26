@@ -55,12 +55,11 @@ func TestParseHostname(t *testing.T) {
 			require.Equal(t, tcase.err, err)
 			if tcase.err != nil {
 				require.Nil(t, u)
-				return
 			} else {
 				require.NotNil(t, u)
+				assert.Equal(t, SSHURLScheme, u.Scheme)
+				assert.Equal(t, "example.com", u.Host)
 			}
-			assert.Equal(t, SSHURLScheme, u.Scheme)
-			assert.Equal(t, "example.com", u.Host)
 		})
 	}
 }
