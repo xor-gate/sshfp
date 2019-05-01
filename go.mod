@@ -8,4 +8,5 @@ require (
 	github.com/stretchr/testify v1.2.2
 	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
 	golang.org/x/net v0.0.0-20180826012351-8a410e7b638d
+	golang.org/x/tools v0.0.0-20181221235234-d00ac6d27372 // indirect
 )

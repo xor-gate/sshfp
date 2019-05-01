@@ -24,8 +24,11 @@ var ErrNoHostKeyFound = fmt.Errorf("sshfp: no host key found")
 // ErrNoDNSServer when no DNS servers is available
 var ErrNoDNSServer = fmt.Errorf("sshfp: no dns server available")
 
+// ErrInvalidURLScheme when the hostname URL scheme is invalid
+var ErrInvalidURLScheme = fmt.Errorf("sshfp: invalid url scheme")
+
 // SSHURLScheme is the URL scheme for SSH hostname urls
-const SSHURLScheme = "ssh://"
+const SSHURLScheme = "ssh"
 
 // Algorithm of the host public key
 type Algorithm uint8
@@ -107,12 +110,26 @@ func ParseZone(r io.Reader) (Entries, error) {
 }
 
 // ParseHostname parses the hostname into a url.URL it automaticlly appends the SSHURLScheme
-//  when not the hostname is not prefixed with a scheme.
+//  when not the hostname is not prefixed with a scheme. The URL scheme must be empty or
+//  "ssh" else the function returns ErrInvalidURLScheme
 func ParseHostname(hostname string) (*url.URL, error) {
-	if !strings.HasPrefix(SSHURLScheme, hostname) {
-		hostname = SSHURLScheme + hostname
+	// url.Parse needs a scheme so we provide it
+	if !strings.Contains(hostname, "://") {
+		hostname = fmt.Sprintf("ssh://%s", hostname)
 	}
-	return url.Parse(hostname)
+
+	u, err := url.Parse(hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	switch u.Scheme {
+	case SSHURLScheme:
+	default:
+		return nil, ErrInvalidURLScheme
+	}
+
+	return u, nil
 }
 
 // AlgorithmFromSSHPublicKey calculates the Algorithm based on the ssh.PublicKey.Type() (ssh.KeyAlgo* string)

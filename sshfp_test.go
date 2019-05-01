@@ -40,9 +40,26 @@ func TestParseZone(t *testing.T) {
 }
 
 func TestParseHostname(t *testing.T) {
-	u, err := ParseHostname("example.com")
-	require.Nil(t, err)
-	require.NotNil(t, u)
-	assert.Equal(t, "ssh", u.Scheme)
-	assert.Equal(t, "example.com", u.Hostname())
+	var tcases = []struct {
+		url string
+		err error
+	}{
+		{"example.com", nil},
+		{"ssh://example.com", nil},
+		{"tcp://example.com", ErrInvalidURLScheme},
+	}
+
+	for _, tcase := range tcases {
+		t.Run(tcase.url, func(t *testing.T) {
+			u, err := ParseHostname(tcase.url)
+			require.Equal(t, tcase.err, err)
+			if tcase.err != nil {
+				require.Nil(t, u)
+			} else {
+				require.NotNil(t, u)
+				assert.Equal(t, SSHURLScheme, u.Scheme)
+				assert.Equal(t, "example.com", u.Host)
+			}
+		})
+	}
 }
