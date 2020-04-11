@@ -4,12 +4,17 @@ notifications:
     on_success: change
     on_failure: always
 
+env:
+  - GO111MODULE=on
+
 language: go
 go:
   - tip
+  - "1.14"
+  - "1.13"
+  - "1.12"
   - "1.11"
-  - "1.10"
-  - 1.9
+  # Prior to go 1.11 will not work because we need go modules
   # Prior to go 1.9 will not work due to github.com/miekg/dns dependency
 
 script:
