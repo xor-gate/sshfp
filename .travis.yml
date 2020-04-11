@@ -13,7 +13,7 @@ go:
   - "1.14"
   - "1.13"
   - "1.12"
-  - "1.11"
+  # Latest golang.org/x/sys/unix requires go 1.12
   # Prior to go 1.11 will not work because we need go modules
   # Prior to go 1.9 will not work due to github.com/miekg/dns dependency
 
