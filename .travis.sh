@@ -7,13 +7,13 @@ LINT_CMD="gometalinter --config .gometalinter.conf"
 echo "--- go env"
 go env
 
-echo "--- lint (gometalinter)"
-go get -v -u github.com/alecthomas/gometalinter
-gometalinter --install
-${LINT_CMD} ./...
+#echo "--- lint (gometalinter)"
+#go get -v -u github.com/alecthomas/gometalinter
+#gometalinter --install
+#${LINT_CMD} ./...
 
-echo "--- create build folder ./build"
-mkdir -p build
+#echo "--- create build folder ./build"
+#mkdir -p build
 
 #echo "--- build and lint examples/*.go"
 #for e in $(ls -1 examples/*.go); do
