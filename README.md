@@ -1,7 +1,7 @@
 # SSHFP resolver for Golang
 
 [![License][License-Image]][License-Url]
-[![Godoc][Godoc-Image]][Godoc-Url]
+[![Gopkg][Gopkg-Image]][Gopkg-Url]
 [![ReportCard][ReportCard-Image]][ReportCard-Url]
 [![Build][Build-Status-Image]][Build-Status-Url]
 [![Coverage][Coverage-Image]][Coverage-Url]
@@ -32,8 +32,8 @@ And implements at least the following RFCs:
 [Stability-Status-Image]: http://badges.github.io/stability-badges/dist/experimental.svg
 [Build-Status-Url]: http://travis-ci.org/xor-gate/sshfp
 [Build-Status-Image]: https://travis-ci.org/xor-gate/sshfp.svg?branch=develop
-[Godoc-Url]: https://godoc.org/github.com/xor-gate/sshfp
-[Godoc-Image]: https://godoc.org/github.com/xor-gate/sshfp?status.svg
+[Gopkg-Url]: https://pkg.go.dev/github.com/xor-gate/sshfp?tab=doc
+[Gopkg-Image]: https://img.shields.io/badge/gopkg-documentation-blue
 [ReportCard-Url]: http://goreportcard.com/report/xor-gate/sshfp
 [ReportCard-Image]: https://goreportcard.com/badge/github.com/xor-gate/sshfp
 [Coverage-Url]: https://codecov.io/gh/xor-gate/sshfp 
